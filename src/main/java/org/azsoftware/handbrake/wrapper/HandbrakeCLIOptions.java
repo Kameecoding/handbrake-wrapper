@@ -1,4 +1,4 @@
-package org.azsoftware;
+package org.azsoftware.handbrake.wrapper;
 
 /**
  * Created by Andrej Kovac (kameecoding) <andrej.kovac.ggc@gmail.com> on 2017-06-17.
