@@ -23,3 +23,15 @@ task runFinalJar(type: JavaExec) {
 	//main = 'org.azsoftware.handbraker.Handbrake'
 }
 
+uploadArchives {
+	repositories {
+		mavenDeployer {
+			repository(url: "http://94.130.55.149:8081/repository/snapshot/") {
+				authentication(userName: "admin", password: nexusPassword)
+			}
+			pom.version = "${version}"
+			pom.artifactId = "${project.name}"
+			pom.groupId = "${project.group}"
+		}
+	}
+}
