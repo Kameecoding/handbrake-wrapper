@@ -50,7 +50,7 @@ public class Handbrake implements Runnable {
 			String s = null;
 			Matcher m = null;
 			Matcher fail = null;
-			while ((s = stdInput.readLine()) != null) {
+			while ((s = stdError.readLine()) != null) {
 				sb.append(s);
 				// System.out.println(s);
 			}

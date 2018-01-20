@@ -23,6 +23,15 @@ task runFinalJar(type: JavaExec) {
 	//main = 'org.azsoftware.handbraker.Handbrake'
 }
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
+}
+
+artifacts {
+	archives sourcesJar
+}
+
 uploadArchives {
 	repositories {
 		mavenDeployer {
