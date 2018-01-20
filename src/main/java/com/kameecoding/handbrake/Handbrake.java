@@ -3,6 +3,7 @@ package com.kameecoding.handbrake;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
@@ -47,16 +48,34 @@ public class Handbrake implements Runnable {
 			// read the output from the command
 			// System.out.println("Here is the standard output of the command:\n");
 			StringBuilder sb = new StringBuilder();
-			String s = null;
+			StringBuilder sb2 = new StringBuilder();
+			String error = null;
+			char[] buff = new char[200];
 			Matcher m = null;
 			Matcher fail = null;
-			while ((s = stdError.readLine()) != null) {
-				sb.append(s);
-				// System.out.println(s);
+			boolean outputFinished = false;
+			boolean errorFinished = false;
+			while (!finished) {
+				if (stdInput.ready()) {
+					if (stdInput.read(buff) != -1) {
+						sb.append(buff);
+						System.out.println(buff);
+					} else {
+						outputFinished = true;
+					}
+				}
+				if (stdError.ready()) {
+					if (stdError.read(buff) != -1) {
+						sb2.append(buff);
+						System.out.println(buff);
+					} else {
+						errorFinished = true;
+					}
+				}
+				finished = outputFinished && errorFinished;
 			}
-			s = sb.toString();
-			output = s;
-			System.out.println(s);
+			output = sb.toString();
+			error = sb2.toString();
 			finished = true;
 			// read any errors from the attempted command
 			/*
