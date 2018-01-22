@@ -1,5 +1,5 @@
 package com.kameecoding.handbrake;
 
-public interface HandbrakeProgressListener {
+public interface IHandbrakeProgressListener {
 	abstract void handleProgressUpdate(HandbrakeProgressUpdate update);
 }
