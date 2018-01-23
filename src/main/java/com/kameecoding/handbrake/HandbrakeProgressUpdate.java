@@ -24,7 +24,7 @@
 package com.kameecoding.handbrake;
 
 /**
- * @author Kameecoding (andrej.kovac.ggc@gmail.com) on 2018-01-23
+ * @author Andrej Kovac (kameecoding) <kamee@kameecoding.com> on 2018-01-23
  *
  */
 public class HandbrakeProgressUpdate {

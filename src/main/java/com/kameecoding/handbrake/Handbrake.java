@@ -38,7 +38,7 @@ import org.apache.commons.io.FileUtils;
 /**
  * Class for invoking handbrake process
  * 
- * @author Andrej Kovac (kameecoding) <andrej.kovac.ggc@gmail.com> on 2017-06-17.
+ * @author Andrej Kovac (kameecoding) <kamee@kameecoding.com> on 2017-06-17.
  */
 public class Handbrake implements Runnable {
 	
