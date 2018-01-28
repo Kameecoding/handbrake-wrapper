@@ -185,10 +185,10 @@ public enum HandbrakeCLIOptions {
 
 
 
-	private String shortOpt;
-	private String longOpt;
-	private String description;
-	private boolean hasArgument;
+	private final String shortOpt;
+	private final String longOpt;
+	private final String description;
+	private final boolean hasArgument;
 
 	HandbrakeCLIOptions(String shortOpt, String longOpt, String description) {
 		this.shortOpt = shortOpt;
@@ -202,5 +202,21 @@ public enum HandbrakeCLIOptions {
 		this.longOpt = longOpt;
 		this.description = description;
 		this.hasArgument = hasArgument;
+	}
+
+	public String getShortOpt() {
+		return shortOpt;
+	}
+
+	public String getLongOpt() {
+		return longOpt;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public boolean isHasArgument() {
+		return hasArgument;
 	}
 }
