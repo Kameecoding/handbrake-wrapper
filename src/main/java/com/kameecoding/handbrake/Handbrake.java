@@ -25,7 +25,6 @@ package com.kameecoding.handbrake;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -34,6 +33,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class for invoking handbrake process
@@ -41,6 +42,7 @@ import org.apache.commons.io.FileUtils;
  * @author Andrej Kovac (kameecoding) <kamee@kameecoding.com> on 2017-06-17.
  */
 public class Handbrake implements Runnable {
+	private static final Logger LOGGER = LoggerFactory.getLogger(Handbrake.class);
 	
 	private ProcessBuilder processBuilder;
 	private Process process;
@@ -65,6 +67,9 @@ public class Handbrake implements Runnable {
 		instance.listener = listener;
 		List<String> arguments = new ArrayList<>(args);
 		arguments.add(0, location);
+		arguments.add(0, "0,1,2,3,4,5");
+		arguments.add(0, "-c");
+		arguments.add(0, "taskset");
 		instance.processBuilder = new ProcessBuilder(arguments);
 		return instance;
 	}
@@ -72,10 +77,10 @@ public class Handbrake implements Runnable {
 	@Override
 	public void run() {
 		try {
+			LOGGER.info("hanbrake running");
 			File error = new File("error.txt");
 			processBuilder.redirectError(error);
 			process = processBuilder.start();
-			
 
 			BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
@@ -84,22 +89,16 @@ public class Handbrake implements Runnable {
 			// read the output from the command
 			// System.out.println("Here is the standard output of the command:\n");
 			StringBuilder sb = new StringBuilder();
+			//String s = null;
 			char[] buff = new char[76];
 			long lastUpdate = System.nanoTime();
 			long currTime = System.nanoTime();
-			int readyLimit = 10;
-			int ready = 0;
-			boolean checkForReadyLimit = false;
 			while (!finished) {
-				if (checkForReadyLimit && ready > readyLimit) {
-					finished = true;
-				}
 				if (stdInput.ready()) {
-					ready = 0;
 					if (stdInput.read(buff) > 0) {
 						sb.append(buff);
 						currTime = System.nanoTime();
-						if (Math.abs(currTime - lastUpdate) > 3000000000L) {
+						if (Math.abs(currTime - lastUpdate) > 1000000000L) {
 							String output = sb.toString();
 							Matcher m = etaPattern.matcher(output);
 							String eta = null;
@@ -108,13 +107,7 @@ public class Handbrake implements Runnable {
 							}
 							m = progressPattern.matcher(output);
 							if (m.find()) {
-								double progress = 0.0;
 								progress =  Double.parseDouble(m.group(1));
-								if (progress == 100.0) {
-									checkForReadyLimit = true;
-								}
-							} else {
-								checkForReadyLimit = true;
 							}
 							listener.handleProgressUpdate(new HandbrakeProgressUpdate(eta, progress));
 							lastUpdate = System.nanoTime();
@@ -123,8 +116,8 @@ public class Handbrake implements Runnable {
 					} else {
 						finished = true;
 					}
-				} else {
-					ready++;
+				} else if (!process.isAlive()) {
+					break;
 				}
 			}
 			success = true;
@@ -135,12 +128,16 @@ public class Handbrake implements Runnable {
 				int errorCode = Integer.parseInt(fail.group(1));
 				if (errorCode > 0) {
 					success = false;
+					if (errorCode == 3) {
+						LOGGER.error("Handbrake Output error. Make sure you create the directory tree for the output");
+					}
 				}
 			}
 			
 			finished = true;
-		} catch (IOException e) {
-			e.printStackTrace();
+			LOGGER.info("hanbrake finished");
+		} catch (Exception e) {
+			LOGGER.error("Handbrake Convert Failed", e);
 		}
 	}
 
