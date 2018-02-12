@@ -17,9 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Class for invoking handbrake process
- *
- * @author Andrej Kovac kameecoding (kamee@kameecoding.com) on 2017-06-17.
+ * Runnable handbrake process
  */
 public class Handbrake implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(Handbrake.class);

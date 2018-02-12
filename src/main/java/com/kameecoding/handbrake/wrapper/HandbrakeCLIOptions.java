@@ -1,8 +1,5 @@
 package com.kameecoding.handbrake.wrapper;
 
-/**
- * @author Andrej Kovac kameecoding (kamee@kameecoding.com) on 2017-06-17.
- */
 public enum HandbrakeCLIOptions {
 
 	/**
