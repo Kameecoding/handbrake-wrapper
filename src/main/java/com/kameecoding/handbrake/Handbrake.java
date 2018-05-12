@@ -33,7 +33,7 @@ public class Handbrake implements Runnable {
             Pattern.compile("([0-9]{2}h[0-9]{2}m[0-9]{2}s)", Pattern.CASE_INSENSITIVE);
     private Pattern resultPattern =
             Pattern.compile("result = ([0-9]{1,2})", Pattern.CASE_INSENSITIVE);
-    private String output;
+    private String error;
     private IHandbrakeProgressListener listener;
 
     private Handbrake() {}
@@ -65,24 +65,15 @@ public class Handbrake implements Runnable {
     public void run() {
         try {
             LOGGER.trace("hanbrake running");
-            File error = new File("error.txt");
-            processBuilder.redirectError(error);
             process = processBuilder.start();
 
             BufferedReader stdInput =
                     new BufferedReader(new InputStreamReader(process.getInputStream()));
-            /*String encoding = "UTF-8";
-            if (SystemUtils.IS_OS_LINUX) {
-                encoding = "UTF-8";
-            }
-            LineIterator lineIterator = IOUtils.lineIterator(process.getInputStream(), encoding);*/
-            // BufferedReader stdError = new BufferedReader(new
-            // InputStreamReader(process.getErrorStream()));
+            BufferedReader stdError =
+                    new BufferedReader(new InputStreamReader(process.getErrorStream()));
 
-            // read the output from the command
-            // System.out.println("Here is the standard output of the command:\n");
             StringBuilder sb = new StringBuilder();
-            // String s = null;
+            StringBuilder errorSb = new StringBuilder();
             char[] buff = new char[76];
             long lastUpdate = System.nanoTime();
             long currTime;
@@ -107,18 +98,20 @@ public class Handbrake implements Runnable {
                             lastUpdate = System.nanoTime();
                         }
                         sb.setLength(0);
-                    } else {
+                    }  else {
                         finished = true;
                     }
+                } else if (stdError.ready()) {
+                    errorSb.append(stdError.readLine());
                 } else if (!process.isAlive()) {
                     break;
                 }
             }
             process.waitFor();
-            success = true;
+            error = errorSb.toString();
+            success = process.exitValue() == 0;
 
-            String errorOuput = FileUtils.readFileToString(error, Charset.defaultCharset());
-            Matcher fail = resultPattern.matcher(errorOuput);
+            Matcher fail = resultPattern.matcher(error);
             if (fail.find()) {
                 int errorCode = Integer.parseInt(fail.group(1));
                 if (errorCode > 0) {
@@ -131,7 +124,7 @@ public class Handbrake implements Runnable {
             }
 
             finished = true;
-            LOGGER.trace("hanbrake finished");
+            LOGGER.trace("handbrake finished");
         } catch (Exception e) {
             LOGGER.error("Handbrake Convert Failed", e);
         }
@@ -141,7 +134,7 @@ public class Handbrake implements Runnable {
         return success;
     }
 
-    public String getOutput() {
-        return output;
+    public String getError() {
+        return error;
     }
 }
