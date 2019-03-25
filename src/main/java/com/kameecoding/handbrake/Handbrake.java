@@ -1,71 +1,49 @@
+/*
+ * Some open source application
+ *
+ * Copyright 2018 by it's authors.
+ *
+ * Licensed under GNU General Public License 3.0 or later.
+ * Some rights reserved. See LICENSE, AUTHORS.
+ *
+ * @license GPL-3.0+ <https://opensource.org/licenses/GPL-3.0>
+ */
 package com.kameecoding.handbrake;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.LineIterator;
-import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
-import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-/**
- * Runnable handbrake process
- */
 public class Handbrake implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(Handbrake.class);
 
     private ProcessBuilder processBuilder;
-    private Process process;
-    private boolean success;
-    private boolean finished;
-    private double progress;
-    private Pattern progressPattern =
-            Pattern.compile("([0-9]{1,3}\\.[0-9]{1,2})[\\s]+?%", Pattern.CASE_INSENSITIVE);
-    private Pattern etaPattern =
-            Pattern.compile("([0-9]{2}h[0-9]{2}m[0-9]{2}s)", Pattern.CASE_INSENSITIVE);
-    private Pattern resultPattern =
-            Pattern.compile("result = ([0-9]{1,2})", Pattern.CASE_INSENSITIVE);
+    private String output;
     private String error;
-    private IHandbrakeProgressListener listener;
 
     private Handbrake() {}
 
     public static Handbrake newInstance(String location, List<String> args) {
-        return newInstance(location, args, null, false);
-    }
+        Handbrake handbrake = new Handbrake();
 
-    public static Handbrake newInstance(
-            String location,
-            List<String> args,
-            IHandbrakeProgressListener listener,
-            boolean taskset) {
-        Handbrake instance = new Handbrake();
-        instance.listener = listener;
         List<String> arguments = new ArrayList<>(args);
         arguments.add(0, location);
+        handbrake.processBuilder = new ProcessBuilder(arguments);
 
-        if (SystemUtils.IS_OS_LINUX) {
-            arguments.add(0, "0,1,2,3,4,5");
-            arguments.add(0, "-c");
-            arguments.add(0, "taskset");
-        }
-        instance.processBuilder = new ProcessBuilder(arguments);
-        return instance;
+        return handbrake;
     }
 
     @Override
     public void run() {
+        LOGGER.trace("hanbrake running");
         try {
-            LOGGER.trace("hanbrake running");
-            process = processBuilder.start();
+            Process process = processBuilder.start();
 
             BufferedReader stdInput =
                     new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -74,64 +52,15 @@ public class Handbrake implements Runnable {
 
             StringBuilder sb = new StringBuilder();
             StringBuilder errorSb = new StringBuilder();
-            char[] buff = new char[76];
-            long lastUpdate = System.nanoTime();
-            long currTime;
-            while (!finished) {
-                if (stdInput.ready()) {
-                    if (stdInput.read(buff) > 0) {
-                        sb.append(buff);
-                        currTime = System.nanoTime();
-                        if (Math.abs(currTime - lastUpdate) > 1000000000L) {
-                            String output = sb.toString();
-                            Matcher m = etaPattern.matcher(output);
-                            String eta = null;
-                            if (m.find()) {
-                                eta = m.group(0);
-                            }
-                            m = progressPattern.matcher(output);
-                            if (m.find()) {
-                                progress = Double.parseDouble(m.group(1));
-                            }
-                            listener.handleProgressUpdate(
-                                    new HandbrakeProgressUpdate(eta, progress));
-                            lastUpdate = System.nanoTime();
-                        }
-                        sb.setLength(0);
-                    }  else {
-                        finished = true;
-                    }
-                } else if (stdError.ready()) {
-                    errorSb.append(stdError.readLine());
-                } else if (!process.isAlive()) {
-                    break;
-                }
-            }
-            process.waitFor();
-            error = errorSb.toString();
-            success = process.exitValue() == 0;
-
-            Matcher fail = resultPattern.matcher(error);
-            if (fail.find()) {
-                int errorCode = Integer.parseInt(fail.group(1));
-                if (errorCode > 0) {
-                    success = false;
-                    if (errorCode == 3) {
-                        LOGGER.error(
-                                "Handbrake Output error. Make sure you create the directory tree for the output");
-                    }
-                }
-            }
-
-            finished = true;
-            LOGGER.trace("handbrake finished");
+            output = String.join("\n", IOUtils.readLines(stdInput));
+            error = String.join("\n", IOUtils.readLines(stdError));
         } catch (Exception e) {
-            LOGGER.error("Handbrake Convert Failed", e);
+            LOGGER.error("Failed to execute handbrake", e);
         }
     }
 
-    public boolean isSuccess() {
-        return success;
+    public String getOutput() {
+        return output;
     }
 
     public String getError() {

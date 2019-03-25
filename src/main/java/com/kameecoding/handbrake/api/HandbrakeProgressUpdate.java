@@ -1,9 +1,9 @@
-package com.kameecoding.handbrake;
+package com.kameecoding.handbrake.api;
 
 public class HandbrakeProgressUpdate {
 	private String ETA;
 	private double progress;
-	
+
 	public HandbrakeProgressUpdate(String eTA, double progress) {
 		super();
 		ETA = eTA;
