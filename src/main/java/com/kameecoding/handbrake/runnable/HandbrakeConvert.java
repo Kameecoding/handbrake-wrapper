@@ -50,11 +50,11 @@ public class HandbrakeConvert implements Runnable {
         List<String> arguments = new ArrayList<>(args);
         arguments.add(0, location);
 
-        if (SystemUtils.IS_OS_LINUX) {
-            arguments.add(0, "0,1,2,3,4,5");
-            arguments.add(0, "-c");
-            arguments.add(0, "taskset");
-        }
+//        if (SystemUtils.IS_OS_LINUX) {
+//            arguments.add(0, "0,1,2,3");
+//            arguments.add(0, "-c");
+//            arguments.add(0, "taskset");
+//        }
         instance.processBuilder = new ProcessBuilder(arguments);
         return instance;
     }
