@@ -2,7 +2,6 @@ package com.kameecoding.handbrake.runnable;
 
 import com.kameecoding.handbrake.api.HandbrakeProgressUpdate;
 import com.kameecoding.handbrake.api.IHandbrakeProgressListener;
-import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,39 +15,39 @@ import java.util.regex.Pattern;
 /**
  * Runnable handbrake process
  */
-public class HandbrakeConvert implements Runnable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(HandbrakeConvert.class);
+public class HandbrakeConverter implements Runnable {
+  private static final Logger LOGGER = LoggerFactory.getLogger(HandbrakeConverter.class);
 
-    private ProcessBuilder processBuilder;
-    private Process process;
-    private boolean success;
-    private boolean finished;
-    private double progress;
-    private Pattern progressPattern =
-            Pattern.compile("([0-9]{1,3}\\.[0-9]{1,2})[\\s]+?%", Pattern.CASE_INSENSITIVE);
-    private Pattern etaPattern =
-            Pattern.compile("([0-9]{2}h[0-9]{2}m[0-9]{2}s)", Pattern.CASE_INSENSITIVE);
+  private ProcessBuilder processBuilder;
+  private Process process;
+  private boolean success;
+  private boolean finished;
+  private double progress;
+  private Pattern progressPattern =
+      Pattern.compile("([0-9]{1,3}\\.[0-9]{1,2})[\\s]+?%", Pattern.CASE_INSENSITIVE);
+  private Pattern etaPattern =
+      Pattern.compile("([0-9]{2}h[0-9]{2}m[0-9]{2}s)", Pattern.CASE_INSENSITIVE);
     private Pattern resultPattern =
             Pattern.compile("result = ([0-9]{1,2})", Pattern.CASE_INSENSITIVE);
     private String error;
     private IHandbrakeProgressListener listener;
 
-    private HandbrakeConvert() {
-    }
+  private HandbrakeConverter() {
+  }
 
-    public static HandbrakeConvert newInstance(String location, List<String> args) {
-        return newInstance(location, args, null, false);
-    }
+  public static HandbrakeConverter newInstance(String location, List<String> args) {
+    return newInstance(location, args, null, false);
+  }
 
-    public static HandbrakeConvert newInstance(
-            String location,
-            List<String> args,
-            IHandbrakeProgressListener listener,
-            boolean taskset) {
-        HandbrakeConvert instance = new HandbrakeConvert();
-        instance.listener = listener;
-        List<String> arguments = new ArrayList<>(args);
-        arguments.add(0, location);
+  public static HandbrakeConverter newInstance(
+      String location,
+      List<String> args,
+      IHandbrakeProgressListener listener,
+      boolean taskset) {
+    HandbrakeConverter instance = new HandbrakeConverter();
+    instance.listener = listener;
+    List<String> arguments = new ArrayList<>(args);
+    arguments.add(0, location);
 
 //        if (SystemUtils.IS_OS_LINUX) {
 //            arguments.add(0, "0,1,2,3");
