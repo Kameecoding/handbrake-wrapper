@@ -11,6 +11,7 @@
 package com.kameecoding.handbrake;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +35,11 @@ public class Handbrake implements Runnable {
 
         List<String> arguments = new ArrayList<>(args);
         arguments.add(0, location);
+        if (SystemUtils.IS_OS_LINUX) {
+            arguments.add(0, "0,3");
+            arguments.add(0, "-c");
+            arguments.add(0, "taskset");
+        }
         handbrake.processBuilder = new ProcessBuilder(arguments);
 
         return handbrake;
@@ -41,7 +47,7 @@ public class Handbrake implements Runnable {
 
     @Override
     public void run() {
-        LOGGER.trace("hanbrake running");
+        LOGGER.trace("handbrake running");
         try {
             Process process = processBuilder.start();
 
